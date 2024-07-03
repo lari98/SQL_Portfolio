@@ -1,3 +1,7 @@
+
+https://app.snowflake.com/rsmmkel/au31634/w12vtpAiB7bE#query
+
+
 /*Query 1: Maximum Perimeter Mean by Diagnosis*/
 SELECT
         diagnosis,
