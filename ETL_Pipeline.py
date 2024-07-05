@@ -38,17 +38,25 @@ Additional Features:
 Upsert: Implement upsert (insert or update) functionality for managing metadata (etl_metadata) in PostgreSQL.
 Error Handling: Incorporate error handling mechanisms to manage exceptions during data extraction and loading.
 Logging: Integrate logging to capture informational and error messages during the ETL process for easier troubleshooting. 
- """
+Explanation:
+
+Scheduler Setup: We import BlockingScheduler from apscheduler and create an instance scheduler.
+Job Scheduling: Using scheduler.add_job(), we schedule the main function to run every 24 hours (hours=24). You can adjust this interval as per your requirement.
+Start Scheduler: scheduler.start() initiates the scheduler, which will now execute the ETL process automatically at the specified interval.
+Running the Script:
+
+Run the script (python your_script.py).
+The scheduler will automatically trigger the ETL process every 24 hours (or as per your interval setting).
+Use Ctrl+C to stop the scheduler manually when needed. """
 # Import necessary libraries
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime
 from sqlalchemy.dialects.postgresql import insert
 import pandas as pd
 import pyodbc
 import os
+from apscheduler.schedulers.blocking import BlockingScheduler  # Import scheduler
 
 # Set environment variables (replace with your actual credentials)
-# Define SQL Server and PostgreSQL connection details
-# Replace with your actual credentials and connection strings
 os.environ['PGPASS'] = 'demopass'
 os.environ['PGUID'] = 'etl'
 
@@ -88,7 +96,6 @@ def extract(table_name):
     finally:
         src_engine.dispose()  # Close SQLAlchemy engine after use
 
-
 def load(df, table_name):
     try:
         # Insert or update metadata in PostgreSQL using SQLAlchemy
@@ -116,7 +123,6 @@ def load(df, table_name):
     except Exception as e:
         print(f"Data load error for {table_name}: {str(e)}")
 
-
 def main():
     tables_to_process = ['DimProduct', 'DimProductSubcategory', 'DimProductCategory', 'DimSalesTerritory', 'FactInternetSales']
     
@@ -125,5 +131,16 @@ def main():
         if not df.empty:
             load(df, table_name)
 
-# Call the main function directly
-main()
+# Create a scheduler instance
+scheduler = BlockingScheduler()
+
+# Schedule the ETL job to run every day at a specific time (adjust as needed)
+scheduler.add_job(main, 'interval', hours=24)
+
+try:
+    # Start the scheduler
+    print("ETL job scheduled to run every day. Press Ctrl+C to exit.")
+    scheduler.start()
+except KeyboardInterrupt:
+    print("\nScheduler stopped manually.")
+
